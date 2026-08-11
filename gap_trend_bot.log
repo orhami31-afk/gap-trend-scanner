@@ -1,0 +1,25 @@
+2026-08-11 16:49:36,248 | gap_trend_bot.main           | INFO    | Running daily scan across 296 symbols...
+2026-08-11 16:49:36,248 | gap_trend_bot.scanner        | INFO    | ======================================================================
+2026-08-11 16:49:36,249 | gap_trend_bot.scanner        | INFO    | Starting daily scan | watchlist size = 296
+2026-08-11 16:49:36,589 | gap_trend_bot.sentiment      | INFO    | Sentiment SPY: close=771.48 sma20=752.35 healthy=True
+2026-08-11 16:49:36,716 | gap_trend_bot.sentiment      | INFO    | Sentiment QQQ: close=718.30 sma20=700.73 healthy=True
+2026-08-11 16:49:43,785 | yfinance                     | ERROR   | $SQ: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 16:49:48,431 | yfinance                     | ERROR   | $MMC: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 16:49:50,669 | yfinance                     | ERROR   | $BK: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 16:49:52,688 | yfinance                     | ERROR   | $FI: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 16:50:10,613 | yfinance                     | ERROR   | $PXD: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 16:50:12,998 | yfinance                     | ERROR   | $HES: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 16:50:13,262 | yfinance                     | ERROR   | $CTRA: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 16:50:13,608 | yfinance                     | ERROR   | $MRO: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 16:50:17,864 | yfinance                     | ERROR   | $NOVA: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 16:50:20,191 | yfinance                     | ERROR   | $SAVE: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 16:50:24,481 | yfinance                     | ERROR   | $SAVA: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 16:50:25,069 | yfinance                     | ERROR   | $EXAS: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 16:50:25,623 | gap_trend_bot.universe       | INFO    | Universe filter: 284 -> 0 symbols passed stage 1
+2026-08-11 16:50:25,623 | gap_trend_bot.trades         | INFO    | SCAN SUMMARY | scanned=296 | passed_universe_filter=0 | entry_signals=0
+2026-08-11 16:50:25,623 | gap_trend_bot.main           | INFO    | Found 0 qualifying setups today.
+2026-08-11 16:50:25,623 | gap_trend_bot.history        | INFO    | Saved 0 results to history/scan_2026-08-11.json
+2026-08-11 16:50:25,623 | gap_trend_bot.supabase       | INFO    | No scan results today - nothing to push.
+2026-08-11 16:50:25,623 | gap_trend_bot.main           | INFO    | Today's results are live in Supabase - no manual paste needed.
+2026-08-11 16:50:25,623 | gap_trend_bot.main           | INFO    | Updating outcomes for past recommendations...
+2026-08-11 16:50:25,624 | gap_trend_bot.main           | INFO    | Done. Results saved under history/ (backup) and pushed to Supabase if configured.
