@@ -23,3 +23,28 @@
 2026-08-11 16:50:25,623 | gap_trend_bot.main           | INFO    | Today's results are live in Supabase - no manual paste needed.
 2026-08-11 16:50:25,623 | gap_trend_bot.main           | INFO    | Updating outcomes for past recommendations...
 2026-08-11 16:50:25,624 | gap_trend_bot.main           | INFO    | Done. Results saved under history/ (backup) and pushed to Supabase if configured.
+2026-08-11 22:09:27,236 | gap_trend_bot.main           | INFO    | Running daily scan across 296 symbols...
+2026-08-11 22:09:27,236 | gap_trend_bot.scanner        | INFO    | ======================================================================
+2026-08-11 22:09:27,236 | gap_trend_bot.scanner        | INFO    | Starting daily scan | watchlist size = 296
+2026-08-11 22:09:27,592 | gap_trend_bot.sentiment      | INFO    | Sentiment SPY: close=770.56 sma20=752.30 healthy=True
+2026-08-11 22:09:27,763 | gap_trend_bot.sentiment      | INFO    | Sentiment QQQ: close=718.45 sma20=700.73 healthy=True
+2026-08-11 22:09:34,814 | yfinance                     | ERROR   | $SQ: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 22:09:39,682 | yfinance                     | ERROR   | $MMC: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 22:09:41,872 | yfinance                     | ERROR   | $BK: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 22:09:43,771 | yfinance                     | ERROR   | $FI: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 22:10:00,703 | yfinance                     | ERROR   | $PXD: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 22:10:02,803 | yfinance                     | ERROR   | $HES: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 22:10:03,078 | yfinance                     | ERROR   | $CTRA: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 22:10:03,400 | yfinance                     | ERROR   | $MRO: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 22:10:07,423 | yfinance                     | ERROR   | $NOVA: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 22:10:09,704 | yfinance                     | ERROR   | $SAVE: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 22:10:13,426 | yfinance                     | ERROR   | $SAVA: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 22:10:14,330 | yfinance                     | ERROR   | $EXAS: possibly delisted; no price data found  (period=35d) (Yahoo error = "No data found, symbol may be delisted")
+2026-08-11 22:10:14,928 | gap_trend_bot.universe       | INFO    | Universe filter: 284 -> 0 symbols passed stage 1
+2026-08-11 22:10:14,928 | gap_trend_bot.trades         | INFO    | SCAN SUMMARY | scanned=296 | passed_universe_filter=0 | entry_signals=0
+2026-08-11 22:10:14,928 | gap_trend_bot.main           | INFO    | Found 0 qualifying setups today.
+2026-08-11 22:10:14,929 | gap_trend_bot.history        | INFO    | Saved 0 results to history/scan_2026-08-11.json
+2026-08-11 22:10:14,929 | gap_trend_bot.supabase       | INFO    | No scan results today - nothing to push.
+2026-08-11 22:10:14,929 | gap_trend_bot.main           | INFO    | Today's results are live in Supabase - no manual paste needed.
+2026-08-11 22:10:14,929 | gap_trend_bot.main           | INFO    | Updating outcomes for past recommendations...
+2026-08-11 22:10:14,930 | gap_trend_bot.main           | INFO    | Done. Results saved under history/ (backup) and pushed to Supabase if configured.
