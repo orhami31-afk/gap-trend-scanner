@@ -1,31 +1,9 @@
-# daily_scan.yml
-# ----------------
-# מריץ את הסריקה היומית אוטומטית, בענן, בלי שהמחשב שלך צריך להיות דלוק.
-#
-# הגדרה חד-פעמית:
-# 1. צור repository חינמי חדש ב-GitHub, והעלה אליו את כל קבצי הפרויקט
-#    (כולל תיקיית .github/workflows/ עם הקובץ הזה).
-# 2. הוסף 3 secrets ב-repository הזה (Settings > Secrets and variables >
-#    Actions > New repository secret):
-#      SUPABASE_URL          - כתובת הפרויקט שלך, למשל https://xxxxx.supabase.co
-#      SUPABASE_SECRET_KEY    - מפתח ה-Secret (sb_secret_...) מ-Project Settings > API Keys
-#                               (לא ה-Publishable key! זה מפתח שרתי בלבד, לעולם לא בקוד)
-#      SUPABASE_USER_ID        - ה-UUID שלך מ-Authentication > Users בדשבורד של Supabase
-#    בלי שלושת אלה, הבוט ימשיך לעבוד כרגיל אבל רק ישמור קבצים מקומיים
-#    ב-history/ (תצטרך להדביק ידנית כמו קודם).
-# 3. זהו - GitHub ירוץ את הסריקה לבד כל יום בשעה שהוגדרה למטה, יכתוב
-#    ישירות ל-Supabase, והאפליקציה תציג את זה לבד בלחיצת "סנכרן מהענן".
-#
-# הערת שעון קיץ/חורף: הזמן למטה (19:30 UTC) מתאים ל-22:30 שעון ישראל
-# בקיץ (IDT, UTC+3). בחורף (IST, UTC+2) זה ירוץ ב-21:30 שעון ישראל -
-# אם חשוב לך זמן מדויק כל השנה, עדכן את ה-cron פעמיים בשנה (סוף מרץ / סוף אוקטובר).
-
 name: Daily Gap & Trend Scan
 
 on:
   schedule:
-    - cron: '30 19 * * 1-5'   # 19:30 UTC, ימי שני-שישי (השוק האמריקאי סגור בשישי-שבת בישראל)
-  workflow_dispatch: {}         # מאפשר גם הרצה ידנית מהכפתור ב-GitHub
+    - cron: '30 19 * * 1-5'
+  workflow_dispatch: {}
 
 jobs:
   scan:
@@ -52,5 +30,5 @@ jobs:
           git config user.name "gap-trend-bot"
           git config user.email "bot@users.noreply.github.com"
           git add history/ gap_trend_bot.log
-          git diff --staged --quiet || git commit -m "Daily scan results $(date -u +%Y-%m-%d)"
+          git diff --staged --quiet || git commit -m "Daily scan results"
           git push
