@@ -1,87 +1,84 @@
 """
 config.py
 ---------
-כל הפרמטרים של אסטרטגיית Gap & Trend Breakout במקום אחד.
-שנה כאן ערכים - שאר הקוד קורא מהקובץ הזה ולא מכיל מספרים "קשיחים".
+כל הפרמטרים של אסטרטגיית "Pullback Continuation" (גרסה 2 - מחליפה את Gap & Trend
+Breakout המקורית). השינוי המרכזי: שערי חובה מצומצמים + ניקוד איכות (4 מתוך 5)
+במקום AND מלא על כל 10 התנאים - כי AND מלא כמעט אף פעם לא נמצא ביקום סביר.
+
+אחוז ההצלחה לעולם לא נקבע כאן - הוא תמיד מחושב בפועל ב-backtest.py על נתונים
+היסטוריים אמיתיים, לכל מניה בנפרד.
 """
 
 from dataclasses import dataclass, field
-from typing import List
 
 
 @dataclass
 class UniverseConfig:
-    """שלב 1: בחירת יקום המניות הראשוני"""
-    min_price: float = 10.0
-    min_avg_daily_volume: int = 1_000_000       # ממוצע נפח יומי ל-30 יום
-    min_rvol: float = 2.0                        # נפח יחסי מינימלי (פי כמה מהממוצע)
-    rvol_lookback_days: int = 30
-    min_gap_pct: float = 2.0                      # גאפ מינימלי (%)
-    max_gap_pct: float = 5.0                      # גאפ מקסימלי (%)
+    """שלב 1: שערי חובה - כל מניה חייבת לעבור את כל אלה כדי בכלל להיכנס לבדיקה."""
+    min_price: float = 15.0
+    min_avg_daily_volume: int = 2_000_000
+    min_rvol: float = 1.8
+    rvol_lookback_days: int = 20
+    min_gap_pct: float = 1.5
+    max_gap_pct: float = 6.0
 
 
 @dataclass
-class EntryConfig:
-    """שלב 2: תנאי כניסה (כולם חייבים להתקיים יחד)"""
-    intraday_timeframe: str = "15m"               # "15m" או "60m"
-    trendline_lookback_bars: int = 20              # כמה נרות אחורה לבניית קו המגמה
-    breakout_volume_multiplier: float = 1.5        # נר הפריצה חייב נפח פי X מהממוצע
-    breakout_volume_lookback: int = 20
+class QualityConfig:
+    """שלב 2: מאגר תנאי איכות - נדרש min_quality_score מתוך quality_pool_size."""
+    quality_pool_size: int = 5
+    min_quality_score: int = 4
 
-    ema_fast: int = 9
-    ema_medium: int = 20
-    sma_slow: int = 50
+    ema_pullback: int = 20            # EMA לבדיקת נסיגה
+    pullback_tolerance_pct: float = 2.0   # מרחק מותר מ-EMA20/POC כדי להיחשב "נסיגה"
 
-    # RSI
+    vwap_lookback_days: int = 20      # קירוב VWAP מגליל (אין נתוני תוך-יומי)
+    vwap_volume_confirm_days: int = 20
+
     rsi_period: int = 14
-    rsi_long_min: float = 50.0
-    rsi_long_max: float = 70.0
-    rsi_short_min: float = 30.0
-    rsi_short_max: float = 50.0
+    rsi_long_min: float = 40.0
+    rsi_long_max: float = 50.0
+    rsi_short_min: float = 50.0
+    rsi_short_max: float = 60.0
 
-    # MACD
     macd_fast: int = 12
     macd_slow: int = 26
     macd_signal: int = 9
 
+    daily_trend_sma: int = 50
+    daily_trend_slope_lookback: int = 5
+
+    poc_lookback_days: int = 30
+    poc_num_bins: int = 40
+
 
 @dataclass
 class SentimentConfig:
-    """שלב 3: פילטר סנטימנט שוק רחב"""
-    market_symbols: List[str] = field(default_factory=lambda: ["SPY", "QQQ"])
+    """שער חובה נוסף (ללונג בלבד): SPY וגם QQQ מעל SMA20."""
+    market_symbols: list = field(default_factory=lambda: ["SPY", "QQQ"])
     market_sma_period: int = 20
 
 
 @dataclass
-class VolumeProfileConfig:
-    """שלב 3: אזורי ערך מוסדי (POC / Volume Profile)"""
-    lookback_days: int = 30
-    num_bins: int = 50
-    poc_proximity_pct: float = 1.0   # הפריצה צריכה להתרחש עד X% מה-POC
-
-
-@dataclass
 class RiskConfig:
-    """שלב 4: ניהול סיכונים"""
-    risk_reward_ratio: float = 2.0
+    """שלב 3: ניהול סיכונים."""
+    risk_reward_ratio: float = 2.0     # המפרט מאפשר 1.5-2.0, ברירת מחדל 2.0
     fixed_risk_usd: float = 500.0
     fixed_target_usd: float = 1000.0
-    breakeven_trigger_rr: float = 1.0   # ברגע שמגיעים לרווח של 1:1 -> גוררים סטופ ל-breakeven
+    breakeven_trigger_rr: float = 1.0
 
 
 @dataclass
 class TradeManagementConfig:
-    """כללי אחזקה - סווינג קצר"""
-    min_holding_days: int = 2
-    max_holding_days: int = 5
+    min_holding_days: int = 1
+    max_holding_days: int = 10
 
 
 @dataclass
 class StrategyConfig:
     universe: UniverseConfig = field(default_factory=UniverseConfig)
-    entry: EntryConfig = field(default_factory=EntryConfig)
+    quality: QualityConfig = field(default_factory=QualityConfig)
     sentiment: SentimentConfig = field(default_factory=SentimentConfig)
-    volume_profile: VolumeProfileConfig = field(default_factory=VolumeProfileConfig)
     risk: RiskConfig = field(default_factory=RiskConfig)
     trade_mgmt: TradeManagementConfig = field(default_factory=TradeManagementConfig)
 
