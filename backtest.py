@@ -1,18 +1,14 @@
 """
 backtest.py
 ------------
-מעריך "אחוז הצלחה משוער" לכל מניה/סיגנל - על סמך בדיקה היסטורית (Backtest)
-של כמה פעמים בעבר הופיע setup דומה על אותה מניה, ומה קרה אחריו (הגיע ליעד
-לפני שהגיע לסטופ, או ההפך).
+מעריך "אחוז הצלחה משוער" לכל מניה - על סמך בדיקה היסטורית אמיתית של כמה
+פעמים בעבר הופיע setup דומה (לפי מודל שערי חובה + ניקוד איכות של
+entry_signals.py) על אותה מניה, ומה קרה אחריו.
 
-הערה חשובה למי שקורא את הפלט: זהו אחוז מבוסס-היסטוריה על אותה מניה
-בלבד (לא הבטחה, לא ייעוץ השקעות). ככל שיש פחות "הישנויות" של ה-setup
-בעבר, כך האומדן פחות מהימן סטטיסטית - המערכת גם מחזירה כמה פעמים
-ה-setup קרה (sample_size) כדי שתדע כמה לסמוך על המספר.
-
-מגבלה טכנית: הבדיקה ההיסטורית משתמשת בנתוני יומי בלבד (לא תוך-יומי),
-ולכן מדמה את תנאי הכניסה בקירוב (גאפ + פילטר ממוצעים + RSI + MACD),
-בלי שחזור מלא של פריצת קו המגמה התוך-יומית.
+הערה חשובה: זהו אחוז מבוסס-היסטוריה על אותה מניה בלבד (לא הבטחה, לא
+ייעוץ השקעות). ככל שיש פחות "הישנויות" של ה-setup בעבר, כך האומדן פחות
+מהימן סטטיסטית - המערכת גם מחזירה sample_size כדי שתדע כמה לסמוך על המספר.
+לעולם אין כאן מספר קבוע-מראש (כמו "70%") - הכל מחושב בפועל.
 """
 
 from __future__ import annotations
@@ -21,7 +17,7 @@ import numpy as np
 from dataclasses import dataclass
 from typing import Optional
 
-from indicators import ema, sma, rsi, macd, macd_histogram_accelerating
+from indicators import ema, sma, rsi, macd, get_poc
 from config import StrategyConfig
 
 
@@ -32,9 +28,14 @@ class BacktestResult:
     avg_days_to_outcome: Optional[float]
 
 
+def _rolling_vwap(df: pd.DataFrame, window: int) -> pd.Series:
+    typical = (df["high"] + df["low"] + df["close"]) / 3
+    pv = typical * df["volume"]
+    return pv.rolling(window).sum() / df["volume"].rolling(window).sum()
+
+
 def _simulate_forward(df: pd.DataFrame, entry_idx: int, direction: str,
                        entry: float, stop: float, target: float, max_hold_days: int) -> Optional[tuple]:
-    """מדמה קדימה מ-entry_idx: בודק אם high/low נוגעים ביעד או בסטופ קודם. מחזיר (won: bool, days) או None אם לא הוכרע בטווח."""
     end_idx = min(entry_idx + max_hold_days, len(df) - 1)
     for i in range(entry_idx + 1, end_idx + 1):
         bar = df.iloc[i]
@@ -46,13 +47,12 @@ def _simulate_forward(df: pd.DataFrame, entry_idx: int, direction: str,
             hit_target = bar["low"] <= target
             hit_stop = bar["high"] >= stop
         if hit_target and hit_stop:
-            # שני התנאים באותו נר - שמרני: מניחים שהסטופ נפגע קודם (תרחיש גרוע)
-            return (False, days_elapsed)
+            return (False, days_elapsed)  # שני התנאים באותו נר - שמרני, מניחים סטופ קודם
         if hit_target:
             return (True, days_elapsed)
         if hit_stop:
             return (False, days_elapsed)
-    return None  # לא הוכרע בטווח הזמן - מדלגים על הדוגמה הזו
+    return None
 
 
 def backtest_symbol(
@@ -63,25 +63,25 @@ def backtest_symbol(
     max_hold_days: int = 10,
 ) -> BacktestResult:
     """
-    daily_df: לפחות ~300 ימי מסחר של נתוני יומי (open/high/low/close/volume).
-    direction: "long" או "short" - הכיוון שבודקים לו setups דומים בעבר.
+    daily_df: לפחות ~300 ימי מסחר של נתוני יומי.
+    direction: "long" או "short".
     """
-    if len(daily_df) < 80:
+    if len(daily_df) < 90:
         return BacktestResult(None, 0, None)
 
     close = daily_df["close"]
-    ema_fast = ema(close, cfg.entry.ema_fast)
-    ema_med = ema(close, cfg.entry.ema_medium)
-    sma_slow = sma(close, cfg.entry.sma_slow)
-    rsi_series = rsi(close, cfg.entry.rsi_period)
-    macd_df = macd(close, cfg.entry.macd_fast, cfg.entry.macd_slow, cfg.entry.macd_signal)
+    ema20 = ema(close, cfg.quality.ema_pullback)
+    sma_trend = sma(close, cfg.quality.daily_trend_sma)
+    rsi_series = rsi(close, cfg.quality.rsi_period)
+    macd_df = macd(close, cfg.quality.macd_fast, cfg.quality.macd_slow, cfg.quality.macd_signal)
+    hist = macd_df["histogram"]
+    vwap = _rolling_vwap(daily_df, cfg.quality.vwap_lookback_days)
+    avg_vol20 = daily_df["volume"].rolling(cfg.quality.vwap_volume_confirm_days).mean()
 
     outcomes = []
     days_list = []
-
-    # מתחילים אחרי שיש מספיק היסטוריה לכל האינדיקטורים (SMA50 + buffer)
-    start = cfg.entry.sma_slow + 5
-    end = len(daily_df) - 1  # צריך "עתיד" לבדוק תוצאה
+    start = cfg.quality.daily_trend_sma + cfg.quality.daily_trend_slope_lookback + 5
+    end = len(daily_df) - 1
 
     for i in range(start, end):
         gap_pct = (daily_df["open"].iloc[i] - close.iloc[i - 1]) / close.iloc[i - 1] * 100
@@ -91,22 +91,34 @@ def backtest_symbol(
         if not (cfg.universe.min_gap_pct <= abs(gap_pct) <= cfg.universe.max_gap_pct):
             continue
 
+        if pd.isna(avg_vol20.iloc[i]) or daily_df["volume"].iloc[i] < avg_vol20.iloc[i] * cfg.universe.min_rvol:
+            continue
+
         price = close.iloc[i]
+        poc = get_poc(daily_df.iloc[max(0, i - cfg.quality.poc_lookback_days):i + 1], num_bins=cfg.quality.poc_num_bins)
+
+        pullback_ok = (
+            (ema20.iloc[i] and abs(price - ema20.iloc[i]) / ema20.iloc[i] <= cfg.quality.pullback_tolerance_pct / 100)
+            or (poc and not pd.isna(poc) and abs(price - poc) / poc <= cfg.quality.pullback_tolerance_pct / 100)
+        )
+
         if direction == "long":
-            ma_ok = price > ema_fast.iloc[i] and price > ema_med.iloc[i] and price > sma_slow.iloc[i]
-            rsi_ok = cfg.entry.rsi_long_min <= rsi_series.iloc[i] <= cfg.entry.rsi_long_max
+            vwap_ok = not pd.isna(vwap.iloc[i]) and price > vwap.iloc[i] and daily_df["volume"].iloc[i] > avg_vol20.iloc[i]
+            rsi_ok = cfg.quality.rsi_long_min <= rsi_series.iloc[i] <= cfg.quality.rsi_long_max and rsi_series.iloc[i] > rsi_series.iloc[i - 1]
+            macd_flip_ok = hist.iloc[i] > hist.iloc[i - 1] and hist.iloc[i - 1] <= hist.iloc[i - 2]
+            trend_ok = not pd.isna(sma_trend.iloc[i]) and not pd.isna(sma_trend.iloc[i - cfg.quality.daily_trend_slope_lookback]) and \
+                price > sma_trend.iloc[i] and sma_trend.iloc[i] > sma_trend.iloc[i - cfg.quality.daily_trend_slope_lookback]
         else:
-            ma_ok = price < ema_fast.iloc[i] and price < ema_med.iloc[i] and price < sma_slow.iloc[i]
-            rsi_ok = cfg.entry.rsi_short_min <= rsi_series.iloc[i] <= cfg.entry.rsi_short_max
+            vwap_ok = not pd.isna(vwap.iloc[i]) and price < vwap.iloc[i] and daily_df["volume"].iloc[i] > avg_vol20.iloc[i]
+            rsi_ok = cfg.quality.rsi_short_min <= rsi_series.iloc[i] <= cfg.quality.rsi_short_max and rsi_series.iloc[i] < rsi_series.iloc[i - 1]
+            macd_flip_ok = hist.iloc[i] < hist.iloc[i - 1] and hist.iloc[i - 1] >= hist.iloc[i - 2]
+            trend_ok = not pd.isna(sma_trend.iloc[i]) and not pd.isna(sma_trend.iloc[i - cfg.quality.daily_trend_slope_lookback]) and \
+                price < sma_trend.iloc[i] and sma_trend.iloc[i] < sma_trend.iloc[i - cfg.quality.daily_trend_slope_lookback]
 
-        if not (ma_ok and rsi_ok):
+        quality_score = sum([bool(pullback_ok), bool(vwap_ok), bool(rsi_ok), bool(macd_flip_ok), bool(trend_ok)])
+        if quality_score < cfg.quality.min_quality_score:
             continue
 
-        hist_window = macd_df["histogram"].iloc[max(0, i - 3): i + 1]
-        if not macd_histogram_accelerating(hist_window, lookback=min(3, len(hist_window) - 1)):
-            continue
-
-        # setup "עבר" את הקירוב ההיסטורי -> נדמה עסקה
         entry_price = price
         recent_low = daily_df["low"].iloc[max(0, i - 10): i + 1].min()
         recent_high = daily_df["high"].iloc[max(0, i - 10): i + 1].max()
