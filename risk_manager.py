@@ -11,6 +11,7 @@ import pandas as pd
 import logging
 
 from config import RiskConfig
+from indicators import ema, get_poc
 
 logger = logging.getLogger("gap_trend_bot.risk")
 
@@ -28,29 +29,42 @@ class TradePlan:
     breakeven_triggered: bool = False
 
 
-def find_recent_swing_stop(df: pd.DataFrame, direction: str, lookback: int = 10) -> float:
-    """מוצא שפל מקומי אחרון (ללונג) או שיא מקומי אחרון (לשורט) לצורך מיקום סטופ טכני."""
-    window = df.tail(lookback)
-    if direction == "long":
-        return float(window["low"].min())
-    else:
-        return float(window["high"].max())
+def find_structural_stop(daily_df: pd.DataFrame, direction: str, lookback: int = 10) -> float:
+    """
+    סטופ מבני לפי אסטרטגיית Pullback Continuation: מתחת לשפל המקומי האחרון /
+    אזור ה-EMA20/POC (הכי רחוק מבין השלושה, כדי לא להיתפס בתנודה נורמלית
+    בתוך אזור הנסיגה עצמו).
+    """
+    window = daily_df.tail(lookback)
+    swing = float(window["low"].min()) if direction == "long" else float(window["high"].max())
+
+    closes = daily_df["close"]
+    ema20 = ema(closes, 20).iloc[-1]
+    poc = get_poc(daily_df.tail(30), num_bins=40)
+
+    candidates = [swing]
+    if ema20 and not pd.isna(ema20):
+        candidates.append(ema20 * (0.99 if direction == "long" else 1.01))
+    if poc and not pd.isna(poc):
+        candidates.append(poc * (0.99 if direction == "long" else 1.01))
+
+    return min(candidates) if direction == "long" else max(candidates)
 
 
 def build_trade_plan(
     symbol: str,
     direction: str,
     entry_price: float,
-    intraday_df: pd.DataFrame,
+    daily_df: pd.DataFrame,
     cfg: RiskConfig,
 ) -> TradePlan:
     """
     בונה תוכנית עסקה מלאה:
-    - סטופ-לוס טכני (שפל/שיא מקומי), מותאם כך שהסיכון הכספי = fixed_risk_usd בדיוק
-      (באמצעות חישוב גודל הפוזיציה, לא הזזת הסטופ עצמו).
-    - יעד רווח לפי risk_reward_ratio (או fixed_target_usd אם הוגדר).
+    - סטופ-לוס מבני (שפל/שיא מקומי + אזור EMA20/POC), מותאם כך שהסיכון הכספי =
+      fixed_risk_usd בדיוק (באמצעות חישוב גודל הפוזיציה, לא הזזת הסטופ עצמו).
+    - יעד רווח לפי risk_reward_ratio.
     """
-    technical_stop = find_recent_swing_stop(intraday_df, direction)
+    technical_stop = find_structural_stop(daily_df, direction)
 
     if direction == "long":
         risk_per_share = entry_price - technical_stop
