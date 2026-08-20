@@ -53,21 +53,19 @@ class GapTrendScanner:
             symbol = row["symbol"]
             try:
                 daily_df = self.provider.get_daily_bars(symbol, lookback_days=400)
-                intraday_df = self.provider.get_intraday_bars(
-                    symbol, interval=CONFIG.entry.intraday_timeframe, lookback_days=5
-                )
-                if daily_df.empty or intraday_df.empty:
+                if daily_df.empty:
                     continue
 
                 signal = evaluate_entry(
-                    symbol, daily_df, intraday_df, row["gap_direction"], CONFIG, self.sentiment
+                    symbol, daily_df, row["gap_direction"], CONFIG, self.sentiment
                 )
                 if not signal.passed:
-                    logger.debug(f"{symbol}: rejected - {signal.fail_reason}")
+                    logger.debug(f"{symbol}: rejected - {signal.fail_reason} "
+                                 f"(quality {signal.quality_score}/{CONFIG.quality.quality_pool_size})")
                     continue
 
                 plan = build_trade_plan(
-                    symbol, signal.direction, signal.entry_price, intraday_df, CONFIG.risk
+                    symbol, signal.direction, signal.entry_price, daily_df, CONFIG.risk
                 )
                 hold_days = estimate_holding_days(
                     daily_df, plan.entry_price, plan.take_profit, min_days=1, max_days=max_hold_days
@@ -88,6 +86,8 @@ class GapTrendScanner:
                     "suggested_hold_days": hold_days,
                     "estimated_success_pct": bt.win_rate_pct,
                     "backtest_sample_size": bt.sample_size,
+                    "quality_score": signal.quality_score,
+                    "quality_pool_size": CONFIG.quality.quality_pool_size,
                     "scan_date": str(date.today()),
                     "outcome": "open",
                     "outcome_date": None,
