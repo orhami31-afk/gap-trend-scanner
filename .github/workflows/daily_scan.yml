@@ -1,9 +1,40 @@
+# daily_scan.yml
+# ----------------
+# מריץ את הסריקה היומית אוטומטית, בענן, בלי שהמחשב שלך צריך להיות דלוק.
+#
+# הגדרה חד-פעמית:
+# 1. צור repository חינמי חדש ב-GitHub, והעלה אליו את כל קבצי הפרויקט
+#    (כולל תיקיית .github/workflows/ עם הקובץ הזה).
+# 2. הוסף 3 secrets ב-repository הזה (Settings > Secrets and variables >
+#    Actions > New repository secret):
+#      SUPABASE_URL          - כתובת הפרויקט שלך, למשל https://xxxxx.supabase.co
+#      SUPABASE_SECRET_KEY    - מפתח ה-Secret (sb_secret_...) מ-Project Settings > API Keys
+#                               (לא ה-Publishable key! זה מפתח שרתי בלבד, לעולם לא בקוד)
+#      SUPABASE_USER_ID        - ה-UUID שלך מ-Authentication > Users בדשבורד של Supabase
+#    בלי שלושת אלה, הבוט ימשיך לעבוד כרגיל אבל רק ישמור קבצים מקומיים
+#    ב-history/ (תצטרך להדביק ידנית כמו קודם).
+# 3. זהו - GitHub ירוץ את הסריקה לבד כל יום בשעה שהוגדרה למטה, יכתוב
+#    ישירות ל-Supabase, והאפליקציה תציג את זה לבד בלחיצת "סנכרן מהענן".
+#
+# הערת שעון קיץ/חורף: הזמנים למטה מתאימים לקיץ (IDT, UTC+3). בחורף (IST, UTC+2)
+# הכל ירוץ שעה מאוחר יותר לפי שעון ישראל - אם חשוב לך זמן מדויק כל השנה, עדכן
+# את שלושת ה-cron פעמיים בשנה (סוף מרץ / סוף אוקטובר).
+#
+# 3 ריצות ביום מסחר (בקשת המשתמש - פתיחה/אמצע/סוף יום):
+#   13:35 UTC = ~9:35 בבוקר שעון ניו יורק (זמן קצר אחרי פתיחת השוק האמריקאי)
+#   16:35 UTC = ~12:35 בצהריים שעון ניו יורק (אמצע יום המסחר)
+#   19:30 UTC = אחרי סגירת השוק, לקראת יום המסחר הבא (הריצה המקורית)
+# שים לב: הריצות של הבוקר/הצהריים משתמשות בנתוני "היום" שעדיין לא נסגר -
+# תקין לאיתות מוקדם על גאפ/נפח, אבל פחות סופי מהריצה הערבית שמשתמשת בנר יומי גמור.
+
 name: Daily Gap & Trend Scan
 
 on:
   schedule:
-    - cron: '30 19 * * 1-5'
-  workflow_dispatch: {}
+    - cron: '35 13 * * 1-5'   # פתיחת השוק
+    - cron: '35 16 * * 1-5'   # אמצע יום המסחר
+    - cron: '30 19 * * 1-5'   # אחרי סגירה, לקראת מחר
+  workflow_dispatch: {}         # מאפשר גם הרצה ידנית מהכפתור ב-GitHub
 
 jobs:
   scan:
@@ -12,6 +43,7 @@ jobs:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       SUPABASE_USER_ID: ${{ secrets.SUPABASE_USER_ID }}
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
     steps:
       - uses: actions/checkout@v4
 
@@ -30,5 +62,5 @@ jobs:
           git config user.name "gap-trend-bot"
           git config user.email "bot@users.noreply.github.com"
           git add history/ gap_trend_bot.log
-          git diff --staged --quiet || git commit -m "Daily scan results"
+          git diff --staged --quiet || git commit -m "Daily scan results $(date -u +%Y-%m-%d)"
           git push
