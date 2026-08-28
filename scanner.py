@@ -19,6 +19,7 @@ from risk_manager import build_trade_plan, update_breakeven, estimate_holding_da
 from trade_logger import log_new_trade, log_breakeven_move, log_scan_summary
 from broker import BrokerInterface
 from backtest import backtest_symbol
+from notifier import send_push_notification
 
 logger = logging.getLogger("gap_trend_bot.scanner")
 
@@ -88,6 +89,7 @@ class GapTrendScanner:
                     "backtest_sample_size": bt.sample_size,
                     "quality_score": signal.quality_score,
                     "quality_pool_size": CONFIG.quality.quality_pool_size,
+                    "checklist": [{"label": q.label, "ok": q.passed} for q in signal.quality_checks],
                     "scan_date": str(date.today()),
                     "outcome": "open",
                     "outcome_date": None,
@@ -104,6 +106,16 @@ class GapTrendScanner:
 
         self.last_results = results
         log_scan_summary(len(self.watchlist), len(candidates), len(results))
+
+        if results:
+            lines = [f"• {r['symbol']} {r['direction'].upper()} - כניסה ${r['entry']:.2f}, יעד ${r['target']:.2f}" for r in results[:10]]
+            more = f"\n(+{len(results)-10} נוספות)" if len(results) > 10 else ""
+            send_push_notification(
+                title=f"🎯 {len(results)} מניות חדשות עברו את הסינון",
+                message="\n".join(lines) + more,
+                priority="high", tags="chart_with_upwards_trend",
+            )
+
         return results
 
     def monitor_open_positions(self):
