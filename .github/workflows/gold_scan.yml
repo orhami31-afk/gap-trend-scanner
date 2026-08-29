@@ -1,0 +1,31 @@
+name: Daily Gold ORB Scan
+
+on:
+  schedule:
+    # 17:35 Israel time = 14:35 UTC in summer (IDT, UTC+3), 15:35 UTC in winter (IST, UTC+2).
+    # Using 14:35 UTC - update to 15:35 around late October / back to 14:35 late March
+    # (Israel DST dates) if you want it to stay exactly on time year-round.
+    - cron: '35 14 * * 0-4'   # Sunday-Thursday (Israeli trading week for US market open days)
+  workflow_dispatch: {}
+
+jobs:
+  gold-scan:
+    runs-on: ubuntu-latest
+    env:
+      TWELVE_DATA_KEY: ${{ secrets.TWELVE_DATA_KEY }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      SUPABASE_USER_ID: ${{ secrets.SUPABASE_USER_ID }}
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests pandas pytz
+
+      - name: Run daily gold scan
+        run: python gold_daily_scan.py
