@@ -2123,3 +2123,28 @@
 2026-10-01 21:13:13,123 | gap_trend_bot.main           | INFO    | Today's results are live in Supabase - no manual paste needed.
 2026-10-01 21:13:13,123 | gap_trend_bot.main           | INFO    | Updating outcomes for past recommendations...
 2026-10-01 21:13:13,126 | gap_trend_bot.main           | INFO    | Done. Results saved under history/ (backup) and pushed to Supabase if configured.
+2026-10-01 23:21:56,818 | gap_trend_bot.main           | INFO    | Running daily scan across 296 symbols...
+2026-10-01 23:21:56,818 | gap_trend_bot.scanner        | INFO    | ======================================================================
+2026-10-01 23:21:56,818 | gap_trend_bot.scanner        | INFO    | Starting daily scan | watchlist size = 296
+2026-10-01 23:21:57,355 | gap_trend_bot.sentiment      | INFO    | Sentiment SPY: close=763.99 sma20=764.06 healthy=False
+2026-10-01 23:21:57,487 | gap_trend_bot.sentiment      | INFO    | Sentiment QQQ: close=742.03 sma20=725.78 healthy=True
+2026-10-01 23:22:04,488 | yfinance                     | ERROR   | $SQ: No data found, symbol may be delisted
+2026-10-01 23:22:09,241 | yfinance                     | ERROR   | $MMC: No data found, symbol may be delisted
+2026-10-01 23:22:11,418 | yfinance                     | ERROR   | $BK: No data found, symbol may be delisted
+2026-10-01 23:22:13,100 | yfinance                     | ERROR   | $FI: No data found, symbol may be delisted
+2026-10-01 23:22:29,058 | yfinance                     | ERROR   | $PXD: No data found, symbol may be delisted
+2026-10-01 23:22:31,183 | yfinance                     | ERROR   | $HES: No data found, symbol may be delisted
+2026-10-01 23:22:31,540 | yfinance                     | ERROR   | $CTRA: No data found, symbol may be delisted
+2026-10-01 23:22:31,898 | yfinance                     | ERROR   | $MRO: No data found, symbol may be delisted
+2026-10-01 23:22:35,803 | yfinance                     | ERROR   | $NOVA: No data found, symbol may be delisted
+2026-10-01 23:22:37,977 | yfinance                     | ERROR   | $SAVE: No data found, symbol may be delisted
+2026-10-01 23:22:41,878 | yfinance                     | ERROR   | $SAVA: No data found, symbol may be delisted
+2026-10-01 23:22:42,559 | yfinance                     | ERROR   | $EXAS: No data found, symbol may be delisted
+2026-10-01 23:22:43,092 | gap_trend_bot.universe       | INFO    | Universe filter: 284 -> 0 symbols passed stage 1
+2026-10-01 23:22:43,093 | gap_trend_bot.trades         | INFO    | SCAN SUMMARY | scanned=296 | passed_universe_filter=0 | entry_signals=0
+2026-10-01 23:22:43,093 | gap_trend_bot.main           | INFO    | Found 0 qualifying setups today.
+2026-10-01 23:22:43,093 | gap_trend_bot.history        | INFO    | Saved 0 results to history/scan_2026-10-01.json
+2026-10-01 23:22:43,093 | gap_trend_bot.supabase       | INFO    | No scan results today - nothing to push.
+2026-10-01 23:22:43,093 | gap_trend_bot.main           | INFO    | Today's results are live in Supabase - no manual paste needed.
+2026-10-01 23:22:43,093 | gap_trend_bot.main           | INFO    | Updating outcomes for past recommendations...
+2026-10-01 23:22:43,096 | gap_trend_bot.main           | INFO    | Done. Results saved under history/ (backup) and pushed to Supabase if configured.
